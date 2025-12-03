@@ -1,0 +1,20 @@
+Based on the following user profile, please calculate the recommended monthly budget allocation for housing, food, transportation, savings, entertainment, and miscellaneous expenses to achieve their financial goals. Ensure that the response is in JSON format with no additional explanations or text.
+
+User Profile: {profile}
+
+Goals: {goals}
+
+Output Format:
+Return the result in JSON format only, with the keys: "monthly_income", "housing", "food", "transportation", "savings", "entertainment", "miscellaneous". Each key should have a numerical value. Do not include any additional text or explanations, only the JSON object.
+
+Output Format:
+    "monthly_income": ,
+    "housing": ,
+    "food": ,
+    "transportation": ,
+    "savings": ,
+    "entertainment": ,
+    "miscellaneous": 
+
+Notes:
+Ensure you do not include ```json ``` in the response, simply give me a valid json string with no formatting or display options
