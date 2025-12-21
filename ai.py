@@ -41,10 +41,8 @@ def retrieve_relevant_context(question: str, profile_id: int, limit: int = 5) ->
         - similarity_scores: Relevance scores
         - retrieval_method: Method used (vector/keyword)
     """
-    # --- THIS IS THE FIX ---
-    # Import from 'profiles.py' instead of 'form_submit.py'
+    # Import from 'profiles.py' to avoid circular imports
     from profiles import search_notes_semantic
-    # --- END FIX ---
     
     try:
         # Perform semantic vector search
@@ -90,11 +88,6 @@ def augment_prompt_with_context(question: str, profile: dict, retrieved_context:
     """
     RAG STEP 2: AUGMENTATION
     Combine user question with retrieved context and profile
-    
-    This creates the augmented prompt that includes:
-    - User's question
-    - Retrieved relevant notes (from vector DB)
-    - User's financial profile
     """
     profile_str = dict_to_string(profile)
     
@@ -127,7 +120,8 @@ INSTRUCTIONS:
 3. Provide specific, actionable recommendations
 4. Format with proper spacing and clear structure
 5. Use dollar amounts without decimals (e.g., $500 not $500.00)
-6. If no relevant notes exist, rely on profile data only
+6. DO NOT use LaTeX formatting or math syntax. Do not use dollar signs for LaTeX (e.g. no $x$).
+7. If no relevant notes exist, rely on profile data only
 
 Provide your financial advice:"""
     
@@ -145,7 +139,7 @@ def generate_rag_response(augmented_prompt: str) -> str:
             messages=[
                 {
                     "role": "system",
-                    "content": "You are a professional financial advisor. Provide clear, well-formatted advice."
+                    "content": "You are a professional financial advisor. Provide clear, well-formatted advice. Do not use LaTeX formatting."
                 },
                 {
                     "role": "user",
@@ -161,11 +155,24 @@ def generate_rag_response(augmented_prompt: str) -> str:
         
         # Post-process for better formatting
         import re
+        
+        # 1. Add space between number and text if missing (e.g., $100Monthly -> $100 Monthly)
         text = re.sub(r'\$(\d+(?:,\d{3})*(?:\.\d{2})?)([a-zA-Z])', r'$\1 \2', text)
+        
+        # 2. Add spaces around math operators
         text = re.sub(r'(\d)([-+*/])(\d)', r'\1 \2 \3', text)
+        
+        # 3. Fix concatenated words
         text = re.sub(r'permonth', 'per month', text)
         text = re.sub(r'peryear', 'per year', text)
+        
+        # 4. Remove .00 decimals
         text = re.sub(r'\$(\d+(?:,\d{3})*)\.00\b', r'$\1', text)
+
+        # 5. CRITICAL FIX FOR FONT ISSUE:
+        # Streamlit interprets $...$ as LaTeX math mode, which changes the font.
+        # We replace all literal $ with \$ to escape them.
+        text = text.replace('$', '\\$')
         
         return text
         
@@ -176,13 +183,6 @@ def generate_rag_response(augmented_prompt: str) -> str:
 def ask_ai_with_rag(profile: dict, question: str, profile_id: int) -> Dict:
     """
     COMPLETE RAG PIPELINE
-    
-    This is the main RAG function that demonstrates:
-    1. RETRIEVAL: Get relevant context from vector DB
-    2. AUGMENTATION: Combine context with user question
-    3. GENERATION: Generate response with LLM
-    
-    Returns full RAG pipeline info for transparency
     """
     # Step 1: RETRIEVAL
     print(f"[RAG] Step 1: Retrieving relevant context for: '{question}'")
@@ -221,14 +221,11 @@ def ask_ai_with_rag(profile: dict, question: str, profile_id: int) -> Dict:
 def get_budget(profile, goals):
     """
     Uses Groq to calculate optimal budget allocation
-    
-    'profile' here is expected to be the 'general' sub-dictionary
     """
     try:
         profile_str = dict_to_string(profile)
         goals_str = ", ".join(goals) if isinstance(goals, list) else str(goals)
         
-        # Get the income from the profile, which is the single source of truth
         monthly_income = profile.get("monthly_income", 5000)
         
         response = client.chat.completions.create(
@@ -271,17 +268,10 @@ Return format (replace with calculated numbers, MUST sum to ${monthly_income}):
         if json_match:
             budget = json.loads(json_match.group())
             
-            # Add monthly_income to the budget dict *for display purposes*
-            # It is NOT saved as part of the budget document, but main.py
-            # will use it. (Self-correction: My previous logic in main.py saves
-            # the whole dict. It's better to NOT add it, and just return
-            # the categories. The main `profile` object already has the income.)
-            
             # Verify the budget adds up correctly
             total = sum(budget.values())
             if abs(total - monthly_income) > 10:
                 print(f"⚠️ Warning: Budget doesn't add up. Total: ${total}, Income: ${monthly_income}")
-                # You could add logic here to scale the budget if it's wrong
             
             return budget
         else:
