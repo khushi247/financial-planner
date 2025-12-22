@@ -1,12 +1,4 @@
-No, the text you pasted above is **not** formatted as valid Markdown code. It looks like "plain text" where the special formatting symbols (like `#` for headings or ````` for code blocks) are missing.
-
-If you paste that directly into a `README.md` file on GitHub, it will look like a messy wall of text without any bolding, boxes, or links.
-
-### How to fix it:
-
-You need to copy the **raw source code** inside the box below. Do not copy the text that looks "pretty" or "rendered"—copy the text that has the hashtags (`#`) and backticks (`````).
-
-Here is the correct raw Markdown code again. **Click the "Copy" button** in the top right corner of this code block:
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](YOUR_STREAMLIT_APP_URL_HERE)
 
 ```markdown
 # 💰 Personal Finance & Budget Advisor
@@ -222,3 +214,4 @@ MIT License - feel free to use for personal or commercial projects.
 ```
 
 ```
+
