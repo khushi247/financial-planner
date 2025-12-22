@@ -1,4 +1,4 @@
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](YOUR_STREAMLIT_APP_URL_HERE)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://financial-planner-uksvanegjfdd6dqn5ubetk.streamlit.app/)
 
 ```markdown
 # 💰 Personal Finance & Budget Advisor
@@ -214,4 +214,5 @@ MIT License - feel free to use for personal or commercial projects.
 ```
 
 ```
+
 
